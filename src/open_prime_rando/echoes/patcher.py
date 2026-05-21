@@ -17,7 +17,14 @@ from open_prime_rando import practice_mod
 from open_prime_rando.area_patcher import AreaPatcher
 from open_prime_rando.dol_patching import all_prime_dol_patches, ppc_helper
 from open_prime_rando.dol_patching.dol_version import find_version_for_dol
-from open_prime_rando.dol_patching.echoes import beam_cost, dol_patches, dol_versions, game_options, stk_on_map
+from open_prime_rando.dol_patching.echoes import (
+    beam_cost,
+    dol_patches,
+    dol_versions,
+    game_options,
+    inventory_slot,
+    stk_on_map,
+)
 from open_prime_rando.echoes import (
     custom_assets,
     custom_items,
@@ -178,6 +185,7 @@ def apply_dol_patches(editor: PatcherEditor, configuration: RandoConfiguration, 
     game_options.apply_patch(
         dol_version.game_options_constructor_address, editor.dol, configuration.game_options_defaults
     )
+    inventory_slot.setup_inventory_slot_to_item(dol_version, editor)
 
 
 def _apply_patches(editor: PatcherEditor, configuration: RandoConfiguration, output: IsoFileWriter) -> None:
@@ -218,7 +226,7 @@ def _apply_patches(editor: PatcherEditor, configuration: RandoConfiguration, out
             title_screen_text=configuration.title_screen_text,
         )
     )
-    logbook.patch_logbook(editor, dol_version)
+    logbook.patch_logbook(editor, dol_version, configuration)
 
     for string_change in configuration.string_changes:
         edit_string(editor, string_change)
@@ -281,6 +289,8 @@ def _apply_patches(editor: PatcherEditor, configuration: RandoConfiguration, out
             editor.dol,
             open_prime_rando_practice_mod.get_elf_for(dol_version.practice_mod_version, configuration.practice_mod),
         )
+
+    inventory_slot.create_new_inventory_slot_array(dol_version, editor)
 
     # Save our changes
     area_patcher.perform_changes()
